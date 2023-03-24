@@ -1,0 +1,19 @@
+type Query {
+    users: [AppUser]
+    userById(id: ID!): AppUser
+}
+type AppUser {
+    id: ID!
+    username: String!
+    creationDate: String!
+    updateDate: String!
+    tasks: [Task]
+}
+
+type Task {
+    id: ID!
+    title: String!
+    description: String!
+    creationDate: String!
+    updateDate: String!
+}
