@@ -1,26 +1,49 @@
+import TaskList from "../component/TaskList";
 import {Task} from "../data/init-data";
-import TaskCard from "../component/TaskCard";
-import {useState} from "react";
+import {useEffect, useState} from "react";
+import './Tasks.css';
+import {useSelector} from "react-redux";
+import {RootState} from "../features/store";
 
-interface Props {
-    tasks: Array<Task>
-}
+const Tasks = () => {
+    const isLoggedIn = useSelector((state: RootState) => state.login.value);
 
-const Tasks = ({tasks} : Props) => {
-    const [taskList, setTaskList] = useState<Array<Task>>(tasks);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean | null>(false);
 
-    const taskClickHandle = (task: Task) => {
-        task.done = !task.done;
-        setTaskList([...taskList]);
-    }
+    useEffect(() => {
+        console.log(`State changed in ${Tasks.name}: ${isLoggedIn}`);
 
-    return <section>
-        <h1>TODO List</h1>
-        <h2>Aktuální úkoly</h2>
-        {taskList.filter(t => !t.done).map( t => <TaskCard key={t.id} task={t} onClick={taskClickHandle} />)}
-        <h2>Splněné úkoly</h2>
-        {taskList.filter(t => t.done).map( t => <TaskCard key={t.id} task={t} onClick={taskClickHandle} />)}
-    </section>
+        if (isLoggedIn) {
+            setLoading(true);
+            fetchData();
+        }
+    }, [isLoggedIn]);
+
+    const fetchData = async () => {
+        const backendUrl = import.meta.env.VITE_BACKEND_URL;
+        let response = null;
+
+        try {
+            response = await fetch(`${backendUrl}/task`);
+        } catch (e : any) {
+            setError(e.message);
+            setTasks([]);
+        }
+
+        setLoading(false);
+        if (response && response.ok) {
+            const tasks = await response.json();
+            setTasks(tasks);
+        }
+    };
+
+    return <div className="tasks">
+        {error && <div className="alert alert-danger">{error}</div>}
+        {loading && <div className="alert alert-danger">loading</div>}
+        <TaskList tasks={tasks} />
+    </div>
 };
 
 export default Tasks;
